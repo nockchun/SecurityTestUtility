@@ -19,8 +19,10 @@ const (
 )
 
 func main() {
+	InitDB()
 	http.HandleFunc("/", handleMain)
 	http.HandleFunc("/lock/", handleLock)
+	http.HandleFunc("/pay/", handlePay)
 
 	fs := http.FileServer(http.Dir("static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
@@ -39,6 +41,22 @@ func handleLock(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+
+	KeyInsert(key)
+	fmt.Fprintf(w, string(jsonBytes))
+}
+
+func handlePay(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	key := Key{r.Form.Get("uuid"), ""}
+	KeySelect(&key)
+
+	jsonBytes, err := json.Marshal(key)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(string(jsonBytes))
 
 	fmt.Fprintf(w, string(jsonBytes))
 }

