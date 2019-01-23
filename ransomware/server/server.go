@@ -56,8 +56,6 @@ func handlePay(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	fmt.Println(string(jsonBytes))
-
 	fmt.Fprintf(w, string(jsonBytes))
 }
 
