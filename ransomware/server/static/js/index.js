@@ -15,7 +15,7 @@ $(document).ready(function(){
             var key = JSON.parse(data)
             $("#key").text(key.Key)
             e.preventDefault();  //stop the browser from following
-            window.location.href = 'decrypt-directory.exe';
+            window.location.href = 'agentDec_windows_64.exe';
         })
     })
 })
