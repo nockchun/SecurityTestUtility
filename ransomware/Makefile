@@ -8,6 +8,7 @@ server_linux:
 	@echo "Building Test Ransomware Linux Server ..."
 	cd server && GOOS=linux GOARCH=amd64 $(BUILD) -o ../bin/server_linux_64
 	cd server && GOOS=linux GOARCH=386   $(BUILD) -o ../bin/server_linux_32
+	@cp -r server/static bin
 
 server_windows:
 	@echo "Building Test Ransomware Windows Server ..."
