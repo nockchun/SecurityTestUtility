@@ -1,4 +1,5 @@
 package main
+
 import "crypto/aes"
 import "crypto/cipher"
 import "io/ioutil"
@@ -10,7 +11,10 @@ import "strings"
 import "fmt"
 import "bufio"
 
-var encryption_extension string = "__enc__"
+const (
+    EncExte = "__enc__"
+    EncPath = "c:/enc_target"
+)
 
 // This function decrypts the directory and its children in a recursive way
 func decryptDirectory(nameDir string, key []byte) {
@@ -33,10 +37,10 @@ func decryptDirectory(nameDir string, key []byte) {
             decryptDirectory(fullChildPath, key)
         } else {
             // We decrypt if it's a file that contains the encryption extension
-            if strings.Contains(f.Name(), encryption_extension){
+            if strings.Contains(f.Name(), EncExte) {
                 decryptFile(fullChildPath, key)
             }
-            
+
         }
     }
 }
@@ -45,7 +49,7 @@ func decryptFile(name string, key []byte) {
     if err != nil {
         panic(err.Error())
     }
-    
+
     block, err := aes.NewCipher(key)
     if err != nil {
         panic(err)
@@ -62,28 +66,29 @@ func decryptFile(name string, key []byte) {
     stream.XORKeyStream(ciphertext, ciphertext)
     // Remove the encrypted file
     os.Remove(name)
-    
+
     // We get the name of the file prior to its encryption
-    name = strings.TrimSuffix(name,encryption_extension)
+    name = strings.TrimSuffix(name, EncExte)
     // Create file with the decrypted information
-    createFileWithContents(name, ciphertext) 
+    createFileWithContents(name, ciphertext)
 }
 
-func createFileWithContents(file  string, text []byte){
+func createFileWithContents(file string, text []byte) {
     // We create a new file for saving the encrypted data.
     f, _ := os.Create(file)
     _, _ = io.Copy(f, bytes.NewReader(text))
- 
+
 }
 
 func main() {
     reader := bufio.NewReader(os.Stdin)
     fmt.Print("Enter decryption key: ")
     key_16, _ := reader.ReadString('\n')
+    fmt.Println(len(key_16))
     // We remove the new line at the end of key_16
-    key_16 = key_16[:len(key_16) - 1]
+    key_16 = key_16[:16]
     fmt.Println(key_16)
-    dir, _ := os.Getwd()
+    // dir, _ := os.Getwd()
     key := []byte(key_16)
-    decryptDirectory(dir,key)    
+    decryptDirectory(EncPath, key)
 }
