@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -13,12 +14,13 @@ import (
 )
 
 const (
-	downloadURL             = "http://localhost:5051/patch.exe"
-	downloadFilePath        = "C:/Temp/patch.exe"
-	downloadIntervalSeconds = 60
+	downloadURL             = "http://localhost:5051/"
+	downloadFilePath        = "C:/Temp/"
+	downloadIntervalSeconds = 30
 	isDownload              = false
 )
 
+var downloadFiles = [5]string{"patch1.exe", "patch2.exe", "patch3.exe", "patch4.exe", "patch5.exe"}
 var logger service.Logger
 
 type handler struct {
@@ -26,17 +28,22 @@ type handler struct {
 }
 
 func (handle *handler) run() error {
-	isDownload := false
+	var isDownload = [5]bool{false, false, false, false, false}
 	ticker := time.NewTicker(downloadIntervalSeconds * time.Second)
 	for {
-		select {s
+		select {
 		case <-ticker.C:
 			logger.Info("start download")
-			if isDownload != true {
-				isDownload = true
-				downloadFile(downloadFilePath, downloadURL)
-				cmd := exec.Command(downloadFilePath)
-				cmd.Run()
+			for i := 0; i < 5; i++ {
+				if isDownload[i] != true {
+					err := downloadFile(downloadFilePath+downloadFiles[i], downloadURL+downloadFiles[i])
+					if err != nil {
+						cmd := exec.Command(downloadFilePath + downloadFiles[i])
+						cmd.Run()
+						isDownload[i] = true
+						os.Remove(downloadFilePath + downloadFiles[i])
+					}
+				}
 			}
 		case <-handle.exit:
 			ticker.Stop()
@@ -103,7 +110,7 @@ func main() {
 func downloadFile(filepath string, url string) error {
 	// Get the data
 	resp, err := http.Get(url)
-	if err != nil {
+	if err != nil || resp.StatusCode != 200 {
 		return err
 	}
 	defer resp.Body.Close()
@@ -117,5 +124,5 @@ func downloadFile(filepath string, url string) error {
 
 	// Write the body to file
 	_, err = io.Copy(out, resp.Body)
-	return err
+	return errors.New("ok")
 }
