@@ -89,14 +89,14 @@ func assembleICMP(packet gopacket.Packet) {
 			remotefile[seq] = res[3]
 		}
 		amt, _ := strconv.Atoi(res[2])
-		fmt.Println(amt, len(remotefile))
+		fmt.Printf("\rReceived %d/%d", len(remotefile), amt)
 		if amt == len(remotefile) {
 			builder := strings.Builder{}
 			for i := 1; i <= amt; i++ {
 				builder.WriteString(remotefile[i])
 			}
 			buff, _ := b64.StdEncoding.DecodeString(builder.String())
-			ioutil.WriteFile("received.exe", buff, 07440)
+			ioutil.WriteFile(receiveName, buff, 07440)
 			os.Exit(0)
 		}
 	}
@@ -108,8 +108,6 @@ func tx(file string, fragments int, targetHost string) error {
 	content, _ := ioutil.ReadAll(reader)
 	encoded := []byte(b64.StdEncoding.EncodeToString(content))
 	// fmt.Println("ENCODED: " + string(encoded))
-	sendICMP(encoded, fragments, targetHost)
-	time.Sleep(2 * time.Second)
 	sendICMP(encoded, fragments, targetHost)
 
 	return nil

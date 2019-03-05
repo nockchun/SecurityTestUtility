@@ -1,2 +1,0 @@
-hello test is test text file.
-i want to transper to other host through icmp packet.
