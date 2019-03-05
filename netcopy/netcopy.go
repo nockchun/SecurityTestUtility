@@ -16,7 +16,8 @@ func main() {
 			Settings bool `settings:"true" allow-unknown-arg:"true"`
 		} `command:"ints" description:"Find all information of network interfaces."`
 		Server struct {
-			Int string `short:"i" long:"interface" required:"true" description:"Interface Name for receiving"`
+			Int  string `short:"i" long:"interface" required:"true" description:"Interface Name for receiving"`
+			Name string `short:"n" long:"name" required:"true" description:"Name of received file."`
 		} `command:"rx" description:"Start server for receiving a data from client(tx-host)."`
 		Client struct {
 			File     string `short:"p" long:"target" required:"true" description:"Full-Path of file what you want to send."`
@@ -25,7 +26,7 @@ func main() {
 		} `command:"tx" description:"Send file to server(rx-host)"`
 	}{}
 
-	// Echo command
+	// Scan Interface
 	gocmd.HandleFlag("InterfaceList", func(cmd *gocmd.Cmd, args []string) error {
 		err := printDevice()
 		if err != nil {
@@ -38,7 +39,7 @@ func main() {
 	// Server Rx commands
 	gocmd.HandleFlag("Server", func(cmd *gocmd.Cmd, args []string) error {
 		fmt.Println("server start at interface of " + flags.Server.Int)
-		err := rx(flags.Server.Int)
+		err := rx(flags.Server.Int, flags.Server.Name)
 		if err != nil {
 			log.Fatal(err)
 			return err

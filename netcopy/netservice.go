@@ -2,13 +2,15 @@ package main
 
 import (
 	"bufio"
-	"encoding/base64"
+	b64 "encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
 	"os"
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/gopacket"
@@ -42,14 +44,17 @@ func printDevice() error {
 }
 
 var (
+	remotefile         = make(map[int]string)
+	receiveName        = ""
 	snapshot_len int32 = 1024
 	promiscuous  bool  = false
 	err          error
-	timeout      time.Duration = 10 * time.Second
+	timeout      time.Duration = 5 * time.Second
 	handle       *pcap.Handle
 )
 
-func rx(device string) error {
+func rx(device string, name string) error {
+	receiveName = name
 	// Open device
 	handle, err = pcap.OpenLive(device, snapshot_len, promiscuous, timeout)
 	if err != nil {
@@ -58,7 +63,7 @@ func rx(device string) error {
 	defer handle.Close()
 
 	// Set filter
-	var filter string = "icmp"
+	var filter string = "icmp[icmptype] == icmp-echo"
 	err = handle.SetBPFFilter(filter)
 	if err != nil {
 		log.Fatal(err)
@@ -76,10 +81,23 @@ func rx(device string) error {
 func assembleICMP(packet gopacket.Packet) {
 	icmpLayer := packet.Layer(layers.LayerTypeICMPv4)
 	if icmpLayer != nil {
-		// fmt.Println("ICMP layer detected.")
 		icmp, _ := icmpLayer.(*layers.ICMPv4)
-		if icmp.TypeCode.Code() == 8 {
-			fmt.Println("payload: ", string(icmp.Payload))
+		re, _ := regexp.Compile(`^NETCOPY_(\d+)\/(\d+)_(.+)$`)
+		res := re.FindStringSubmatch(string(icmp.Payload))
+		if len(res) == 4 {
+			seq, _ := strconv.Atoi(res[1])
+			remotefile[seq] = res[3]
+		}
+		amt, _ := strconv.Atoi(res[2])
+		fmt.Println(amt, len(remotefile))
+		if amt == len(remotefile) {
+			builder := strings.Builder{}
+			for i := 1; i <= amt; i++ {
+				builder.WriteString(remotefile[i])
+			}
+			buff, _ := b64.StdEncoding.DecodeString(builder.String())
+			ioutil.WriteFile("received.exe", buff, 07440)
+			os.Exit(0)
 		}
 	}
 }
@@ -88,8 +106,10 @@ func tx(file string, fragments int, targetHost string) error {
 	tf, _ := os.Open(file)
 	reader := bufio.NewReader(tf)
 	content, _ := ioutil.ReadAll(reader)
-	encoded := []byte(base64.StdEncoding.EncodeToString(content))
+	encoded := []byte(b64.StdEncoding.EncodeToString(content))
 	// fmt.Println("ENCODED: " + string(encoded))
+	sendICMP(encoded, fragments, targetHost)
+	time.Sleep(2 * time.Second)
 	sendICMP(encoded, fragments, targetHost)
 
 	return nil
@@ -111,6 +131,7 @@ func sendICMP(msg []byte, fragment int, targetHost string) {
 		msgE = msgT
 	}
 	for msgE <= msgT {
+		time.Sleep(100 * time.Microsecond)
 		wm := icmp.Message{
 			Type: ipv4.ICMPTypeEcho, Code: 0,
 			Body: &icmp.Echo{
