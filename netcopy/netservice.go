@@ -84,13 +84,13 @@ func assembleICMP(packet gopacket.Packet) {
 	}
 }
 
-func tx(file string, fragments int) error {
+func tx(file string, fragments int, targetHost string) error {
 	tf, _ := os.Open(file)
 	reader := bufio.NewReader(tf)
 	content, _ := ioutil.ReadAll(reader)
 	encoded := []byte(base64.StdEncoding.EncodeToString(content))
 	// fmt.Println("ENCODED: " + string(encoded))
-	sendICMP(encoded, fragments)
+	sendICMP(encoded, fragments, targetHost)
 
 	return nil
 }
