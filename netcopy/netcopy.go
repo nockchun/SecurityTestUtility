@@ -19,9 +19,9 @@ func main() {
 			Int string `short:"i" long:"interface" required:"true" description:"Interface Name for receiving"`
 		} `command:"rx" description:"Start server for receiving a data from client(tx-host)."`
 		Client struct {
-			File     string `short:"t" long:"target" required:"true" description:"Full-Path of file what you want to send."`
+			File     string `short:"p" long:"target" required:"true" description:"Full-Path of file what you want to send."`
 			Fragment int    `short:"f" long:"fragments" required:"true" description:"Frigments size of file."`
-			Host     string `short:"h" long:"host" required:"true" description:"Where you want to copy."`
+			Host     string `short:"t" long:"host" required:"true" description:"Where you want to copy."`
 		} `command:"tx" description:"Send file to server(rx-host)"`
 	}{}
 
