@@ -95,8 +95,7 @@ func tx(file string, fragments int) error {
 	return nil
 }
 
-func sendICMP(msg []byte, fragment int) {
-	targetIP := "10.0.2.5"
+func sendICMP(msg []byte, fragment int, targetHost string) {
 	c, err := icmp.ListenPacket("ip4:icmp", "0.0.0.0")
 	if err != nil {
 		log.Fatalf("listen err, %s", err)
@@ -123,7 +122,7 @@ func sendICMP(msg []byte, fragment int) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		if _, err := c.WriteTo(wb, &net.IPAddr{IP: net.ParseIP(targetIP)}); err != nil {
+		if _, err := c.WriteTo(wb, &net.IPAddr{IP: net.ParseIP(targetHost)}); err != nil {
 			log.Fatalf("WriteTo err, %s", err)
 		}
 
